@@ -32,8 +32,8 @@
         <div class="col-12 mb-2 mt-2">
             <div class="form-group row">
                 <label for="company_name" class="col-md-2 text-md-right">メーカー名</label>
-                @foreach ($bunruis as $bunrui)
-                    @if($bunrui->id==$product->company_name) {{ $bunrui->str }} @endif
+                @foreach ($companies as $company)
+                    @if($company->id==$product->company_name) {{ $company->company_name }} @endif
                 @endforeach
             </div>
         </div>

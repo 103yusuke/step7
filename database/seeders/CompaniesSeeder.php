@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class BunruisSeeder extends Seeder
+class CompaniesSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -14,21 +14,21 @@ class BunruisSeeder extends Seeder
      */
     public function run()
     {
-        \DB::table('bunruis')->insert([
+        \DB::table('companies')->insert([
             [
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => null,
-                'str'=> 'Coca-Cola',
+                'company_name'=> 'Coca-Cola',
             ],
             [
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => null,
-                'str'=> 'サントリー',
+                'company_name'=> 'サントリー',
             ],
             [
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => null,
-                'str'=> 'キリン',
+                'company_name'=> 'キリン',
             ],
         ]);
     }

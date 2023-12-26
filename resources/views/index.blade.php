@@ -8,9 +8,9 @@
         
         <select class="form-control me-2" name="company_name">
             <option selected="selected" value="">メーカー名</option>
-            @foreach ($bunruis as $bunrui)
-                <option value="{{ $bunrui->id }}" {{ $bunrui->id == $selectedBunrui ? 'selected' : '' }}>
-                    {{ $bunrui->str }}
+            @foreach ($companies as $company)
+                <option value="{{ $company->id }}" {{ $company->id == $selectedCompany ? 'selected' : '' }}>
+                    {{ $company->company_name }}
                 </option>
             @endforeach
         </select>
@@ -23,6 +23,9 @@
     <div class="col-lg-12">
         @if ($message = Session::get('success'))
             <div class="alert alert-success mt-1"><p>{{ $message }}</p></div>
+        @endif
+        @if ($error = Session::get('error'))
+            <div class="alert alert-danger mt-1"><p>{{ $error }}</p></div>
         @endif
     </div>
 </div>

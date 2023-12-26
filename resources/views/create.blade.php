@@ -21,15 +21,15 @@
 
     <div class="col-12 mb-2 mt-2">
             <div class="form-group row">
-            <label for="bunrui" class="col-md-4 col-form-label text-md-right">メーカー名</label>
+            <label for="company" class="col-md-4 col-form-label text-md-right">メーカー名</label>
             <div class="col-md-6">
-                <select name="bunrui" class="form-select">
+                <select name="company_name" class="form-select">
                     <option>選択してください</option>
-                    @foreach ($bunruis as $bunrui)
-                        <option value="{{ $bunrui->id }}">{{ $bunrui->str }}</otion>
+                    @foreach ($companies as $company)
+                        <option value="{{ $company->id }}">{{ $company->company_name }}</otion>
                     @endforeach
                 </select>
-                @error('bunrui')
+                @error('company_name')
                 <span style="color:red;">※入力してください</span>
                 @enderror
             </div>
