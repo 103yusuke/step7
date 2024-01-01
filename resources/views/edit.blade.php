@@ -80,23 +80,33 @@
                     <label for="name" class="col-md-2 col-form-label text-md-right">コメント</label>
                     <div class="col-md-10">
                         <textarea name="comment" class="form-control" style="height:100px">{{ old('comment', $product->comment) }}</textarea>
-                        @error('comment')
-                            <span style="color:red;">※入力してください</span>
-                        @enderror
                     </div>
                 </div>
             </div>
 
             <div class="form-group row">
-                <label for="img_path" class="col-md-2 col-form-label text-md-right">商品画像</label>
-                <div class="col-md-10">
-                    <input type="file" class="form-control-file" name='img_path' id="img_path">
-                    @error('img_path')
-                        <span style="color:red;">※{{ $message }}</span>
-                    @enderror
-                </div>
+    <label for="img_path" class="col-md-2 col-form-label text-md-right">商品画像</label>
+    <div class="col-md-10">
+        <input type="file" class="form-control-file" name='img_path' id="img_path">
+        @error('img_path')
+            <span style="color:red;">※{{ $message }}</span>
+        @enderror
+
+        @if ($product->img_path)
+            <div class="mt-2">
+                <img src="{{ asset('storage/' . $product->img_path) }}" alt="商品画像" style="max-width: 300px;">
             </div>
-        </div>
+            <div class="mt-2">
+                <label>
+                    <input type="checkbox" name="remove_img" value="1"> 画像を削除する
+                </label>
+            </div>
+        @endif
+    </div>
+</div>
+
+
+        
 
         <div class="col-12 mb-2 mt-2">
             <button type="submit" class="btn btn-primary">変更</button>

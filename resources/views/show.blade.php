@@ -14,13 +14,12 @@
 
         <div class="col-12 mb-2 mt-2">
             <div class="form-group row">
-                <label for="name" class="col-md-2 text-md-right">商品画像</label>
+                <label for="img_path" class="col-md-2 text-md-right">商品画像</label>
                 <div class="col-md-10">
-                    <img src="{{ asset($product->img_path) }}" alt="商品画像" class="img-fluid">
+                    <img src="{{ asset('storage/' . $product->img_path) }}" alt="商品画像">
                 </div>
             </div>
         </div>
-
 
         <div class="col-12 mb-2 mt-2">
             <div class="form-group row">

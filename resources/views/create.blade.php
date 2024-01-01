@@ -7,6 +7,7 @@
     @csrf
      
      <div class="row">
+
      <div class="col-12 mb-2 mt-2">
         <div class="form-group row">
             <label for="product_name" class="col-md-4 col-form-label text-md-right">商品名</label>
@@ -30,7 +31,7 @@
                     @endforeach
                 </select>
                 @error('company_name')
-                <span style="color:red;">※入力してください</span>
+                <span style="color:red;">※選択してください</span>
                 @enderror
             </div>
         </div>
@@ -70,24 +71,23 @@
     </div>
 
     <div class="col-12 mb-2 mt-2">
-    <div class="form-group row">
-        <label for="img_path" class="col-md-4 col-form-label text-md-right">商品画像</label>
-        <div class="col-md-2">
-            <input type="file" class="form-control-file" name='img_path' id="img_path">
-            @error('img_path')
+        <div class="form-group row">
+            <label for="img_path" class="col-md-4 col-form-label text-md-right">商品画像</label>
+            <div class="col-md-2">
+                <input type="file" class="form-control-file" name='img_path' id="img_path">
+                @error('img_path')
                 <span style="color:red;">※{{ $message }}</span>
-            @enderror
+                @enderror
+            </div>
         </div>
     </div>
-</div>
-
 
     <div class="col-12 mb-2 mt-2">
         <button type="submit" class="btn btn-primary">新規登録</button>
         <a class="btn btn-success" href="{{ url('/products') }}">戻る</a>
     </div>
 
-</div>      
+    </div>      
 </form>
 </div>
 @endsection

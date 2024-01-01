@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Company;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class ProductController extends Controller
 {
@@ -41,7 +43,7 @@ class ProductController extends Controller
             $path = null;
             if ($request->hasFile('img_path')) {
                 $image = $request->file('img_path');
-                $path = $image->store('/public');
+                $path = $image->store('public');
                 $path = explode('/', $path);
             }
 
@@ -55,8 +57,8 @@ class ProductController extends Controller
             $product->save();
 
             return redirect()->route('products.index')->with('success', '商品を登録しました');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', '商品の登録に失敗しました: ' . $e->getMessage());
+        } catch (ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors())->withInput();
         }
     }
 
@@ -72,38 +74,54 @@ class ProductController extends Controller
         return view('edit', compact('product', 'companies'));
     }
 
-    public function update(Request $request, Product $product)
-    {
-        try {
-            $request->validate([
-                'product_name' => 'required|max:20',
-                'company_name' => 'required|integer',
-                'price' => 'required|integer',
-                'stock' => 'required|integer',
-                'comment' => 'max:200',
-                'img_path' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
-            ]);
+    
 
-            $path = null;
-            if ($request->hasFile('img_path')) {
-                $image = $request->file('img_path');
-                $path = $image->store('/public');
-                $path = explode('/', $path);
+public function update(Request $request, Product $product)
+{
+    try {
+        $request->validate([
+            'product_name' => 'required|max:20',
+            'company_name' => 'required|integer',
+            'price' => 'required|integer',
+            'stock' => 'required|integer',
+            'comment' => 'max:200',
+            'img_path' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
+        // 画像削除のチェックが入っている場合
+        if ($request->has('remove_img')) {
+            // 既存の画像を削除
+            Storage::delete('public/' . $product->img_path);
+            $product->img_path = null;
+        }
+
+        // 新しい画像がアップロードされた場合の処理
+        if ($request->hasFile('img_path')) {
+            $image = $request->file('img_path');
+            $path = $image->store('public');
+            $path = explode('/', $path);
+
+            // 既存の画像があれば削除
+            if ($product->img_path) {
+                Storage::delete('public/' . $product->img_path);
             }
 
-            $product->product_name = $request->input('product_name');
-            $product->company_name = $request->input('company_name');
-            $product->price = $request->input('price');
-            $product->stock = $request->input('stock');
-            $product->comment = $request->input('comment');
-            $product->img_path = $path ? end($path) : null;
-            $product->save();
-
-            return redirect()->route('products.index')->with('success', '商品を更新しました');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', '商品の更新に失敗しました: ' . $e->getMessage());
+            $product->img_path = end($path);
         }
+
+        $product->product_name = $request->input('product_name');
+        $product->company_name = $request->input('company_name');
+        $product->price = $request->input('price');
+        $product->stock = $request->input('stock');
+        $product->comment = $request->input('comment');
+        $product->save();
+
+        return redirect()->route('products.index')->with('success', '商品を更新しました');
+    } catch (ValidationException $e) {
+        return redirect()->back()->withErrors($e->errors())->withInput();
     }
+}
+
 
     public function destroy(Product $product)
     {
