@@ -29,38 +29,40 @@ class ProductController extends Controller
     }
 
     public function store(Request $request)
-    {
-        try {
-            $request->validate([
-                'product_name' => 'required|max:20',
-                'company_name' => 'required|integer',
-                'price' => 'required|integer',
-                'stock' => 'required|integer',
-                'comment' => 'max:200',
-                'img_path' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
-            ]);
+{
+    try {
+        $request->validate([
+            'product_name' => 'required|max:20',
+            'company_name' => 'required|integer',
+            'price' => 'required|integer',
+            'stock' => 'required|integer',
+            'comment' => 'max:200',
+            'img_path' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
 
-            $path = null;
-            if ($request->hasFile('img_path')) {
-                $image = $request->file('img_path');
-                $path = $image->store('public');
-                $path = explode('/', $path);
-            }
-
-            $product = new Product;
-            $product->product_name = $request->input('product_name');
-            $product->company_name = $request->input('company_name');
-            $product->price = $request->input('price');
-            $product->stock = $request->input('stock');
-            $product->comment = $request->input('comment');
-            $product->img_path = $path ? end($path) : null;
-            $product->save();
-
-            return redirect()->route('products.index')->with('success', '商品を登録しました');
-        } catch (ValidationException $e) {
-            return redirect()->back()->withErrors($e->errors())->withInput();
+        $path = null;
+        if ($request->hasFile('img_path')) {
+            $image = $request->file('img_path');
+            $path = $image->store('public');
+            $path = explode('/', $path);
         }
+
+        $data = [
+            'product_name' => $request->input('product_name'),
+            'company_name' => $request->input('company_name'),
+            'price' => $request->input('price'),
+            'stock' => $request->input('stock'),
+            'comment' => $request->input('comment'),
+            'img_path' => $path ? end($path) : null,
+        ];
+
+        $product = Product::createProduct($data);
+
+        return redirect()->route('products.index')->with('success', '商品を登録しました');
+    } catch (ValidationException $e) {
+        return redirect()->back()->withErrors($e->errors())->withInput();
     }
+}
 
     public function show(Product $product)
     {
@@ -76,51 +78,45 @@ class ProductController extends Controller
 
     
 
-public function update(Request $request, Product $product)
-{
-    try {
-        $request->validate([
-            'product_name' => 'required|max:20',
-            'company_name' => 'required|integer',
-            'price' => 'required|integer',
-            'stock' => 'required|integer',
-            'comment' => 'max:200',
-            'img_path' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
-        ]);
-
-        // 画像削除のチェックが入っている場合
-        if ($request->has('remove_img')) {
-            // 既存の画像を削除
-            Storage::delete('public/' . $product->img_path);
-            $product->img_path = null;
-        }
-
-        // 新しい画像がアップロードされた場合の処理
-        if ($request->hasFile('img_path')) {
-            $image = $request->file('img_path');
-            $path = $image->store('public');
-            $path = explode('/', $path);
-
-            // 既存の画像があれば削除
-            if ($product->img_path) {
-                Storage::delete('public/' . $product->img_path);
+    public function update(Request $request, Product $product)
+    {
+        try {
+            $request->validate([
+                'product_name' => 'required|max:20',
+                'company_name' => 'required|integer',
+                'price' => 'required|integer',
+                'stock' => 'required|integer',
+                'comment' => 'max:200',
+                'img_path' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            ]);
+    
+            if ($request->has('remove_img')) {
+                $product->deleteProduct();
+            } else {
+                $path = null;
+                if ($request->hasFile('img_path')) {
+                    $image = $request->file('img_path');
+                    $path = $image->store('public');
+                    $path = explode('/', $path);
+                }
+    
+                $data = [
+                    'product_name' => $request->input('product_name'),
+                    'company_name' => $request->input('company_name'),
+                    'price' => $request->input('price'),
+                    'stock' => $request->input('stock'),
+                    'comment' => $request->input('comment'),
+                    'img_path' => $path ? end($path) : null,
+                ];
+    
+                $product->updateProduct($data);
             }
-
-            $product->img_path = end($path);
+    
+            return redirect()->route('products.index')->with('success', '商品を更新しました');
+        } catch (ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors())->withInput();
         }
-
-        $product->product_name = $request->input('product_name');
-        $product->company_name = $request->input('company_name');
-        $product->price = $request->input('price');
-        $product->stock = $request->input('stock');
-        $product->comment = $request->input('comment');
-        $product->save();
-
-        return redirect()->route('products.index')->with('success', '商品を更新しました');
-    } catch (ValidationException $e) {
-        return redirect()->back()->withErrors($e->errors())->withInput();
     }
-}
 
 
     public function destroy(Product $product)

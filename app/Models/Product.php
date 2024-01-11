@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -44,5 +45,31 @@ class Product extends Model
         }
 
         return $productsQuery->paginate(5);
+    }
+
+    public static function createProduct($data)
+    {
+        $product = new self;
+        $product->fill($data);
+        $product->save();
+
+        return $product;
+    }
+
+    public function updateProduct($data)
+    {
+        $this->fill($data);
+        $this->save();
+
+        return $this;
+    }
+
+    public function deleteProduct()
+    {
+        if ($this->img_path) {
+            Storage::delete('public/' . $this->img_path);
+        }
+
+        $this->delete();
     }
 }
