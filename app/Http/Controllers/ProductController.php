@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Company;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -29,7 +30,7 @@ class ProductController extends Controller
     }
 
     public function store(Request $request)
-{
+    {
     try {
         $request->validate([
             'product_name' => 'required|max:20',
@@ -62,7 +63,7 @@ class ProductController extends Controller
     } catch (ValidationException $e) {
         return redirect()->back()->withErrors($e->errors())->withInput();
     }
-}
+    }
 
     public function show(Product $product)
     {
@@ -75,8 +76,6 @@ class ProductController extends Controller
         $companies = Company::all();
         return view('edit', compact('product', 'companies'));
     }
-
-    
 
     public function update(Request $request, Product $product)
     {
@@ -118,7 +117,7 @@ class ProductController extends Controller
         }
     }
 
-
+    //削除処理
     public function destroy(Product $product)
     {
         try {
@@ -128,4 +127,47 @@ class ProductController extends Controller
             return redirect()->back()->with('error', '商品の削除に失敗しました: ' . $e->getMessage());
         }
     }
+
+    //非同期で呼び出される検索メソッド
+    public function search(Request $request)
+    {
+        $keyword = $request->input('keyword');
+        $minPrice = $request->input('min_price');
+        $maxPrice = $request->input('max_price');
+        $minStock = $request->input('min_stock');
+        $maxStock = $request->input('max_stock');
+        $selectedCompany = $request->input('company_name');
+        
+        $products = Product::getProducts($keyword, $selectedCompany, $minPrice, $maxPrice, $minStock, $maxStock);
+
+        return view('search_results', compact('products', 'keyword'))->render();
+    }
+
+    public function sort(Request $request)
+{
+    $column = $request->input('column');
+    $order = $request->input('order');
+
+    // ソートの状態をセッションに保存
+    session(['sort_column' => $column, 'sort_order' => $order]);
+
+    // ソート対象と順序に基づいてデータを取得
+    $products = Product::select([
+            'products.id',
+            'products.img_path',
+            'products.product_name',
+            'products.price',
+            'products.stock',
+            'products.company_name',
+            'products.comment',
+            'companies.company_name as company_name',
+        ])
+        ->from('products')
+        ->join('companies', 'products.company_name', '=', 'companies.id')
+        ->orderBy($column, $order, 'utf8_unicode_ci') // COLLATEを指定して文字列としてソート
+        ->paginate(5);
+
+    return view('search_results', compact('products'))->render(); return view('search_results', compact('products'))->render();
+    }
+
 }
