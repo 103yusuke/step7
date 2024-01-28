@@ -16,7 +16,7 @@ class Product extends Model
         return $this->belongsTo(Company::class, 'company_name', 'id');
     }
 
-    public static function getProducts($keyword = '', $selectedCompany = '')
+    public static function getProducts($keyword = '', $selectedCompany = '', $minPrice = null, $maxPrice = null, $minStock = null, $maxStock = null)
     {
         $productsQuery = self::select([
             'products.id',
@@ -42,6 +42,22 @@ class Product extends Model
 
         if (!empty($selectedCompany)) {
             $productsQuery->where('products.company_name', '=', $selectedCompany);
+        }
+
+        if ($minPrice !== null) {
+            $productsQuery->where('products.price', '>=', $minPrice);
+        }
+
+        if ($maxPrice !== null) {
+            $productsQuery->where('products.price', '<=', $maxPrice);
+        }
+
+        if ($minStock !== null) {
+            $productsQuery->where('products.stock', '>=', $minStock);
+        }
+
+        if ($maxStock !== null) {
+            $productsQuery->where('products.stock', '<=', $maxStock);
         }
 
         return $productsQuery->paginate(5);
