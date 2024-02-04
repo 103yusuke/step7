@@ -51,7 +51,7 @@
         </thead>
         <tbody>
             @foreach ($products as $product)
-            <tr>
+            <tr id="product-row-{{ $product->id }}">
                 <td style="text-align:right">{{ $product->id }}</td>
                 <td><img src="{{ asset('storage/' . $product->img_path) }}" alt="商品画像" style="max-width: 100px; max-height: 50px;"></td>
                 <td>{{ $product->product_name }}</td>
@@ -63,11 +63,7 @@
                 </td>
                 <!-- 削除ボタン -->
                 <td style="text-align:center">
-                    <form action="{{ route('product.destroy' ,$product->id) }}" method="POST">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger" onclick='return confirm("削除しますか？");'>削除</button>
-                    </form>
+                    <button class="btn btn-danger delete-btn" data-product-id="{{ $product->id }}">削除</button>
                 </td>
             </tr>
             @endforeach
@@ -79,6 +75,13 @@
 
 <script>
     $(document).ready(function () {
+        // CSRFトークンを含める
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+
         var sortOrders = {};
 
         // 初期ソート状態をセッションから取得
@@ -86,58 +89,90 @@
         var initialSortOrder = "{{ session('sort_order', 'asc') }}";
 
         // ソート順を初期化
-        $('.sort').each(function() {
+        $('.sort').each(function () {
             var column = $(this).data('column');
             sortOrders[column] = (column === initialSortColumn) ? initialSortOrder : 'asc';
             $(this).removeClass('asc desc').addClass(sortOrders[column]);
         });
 
         // クリック毎に昇順・降順を切り替える
-        $(document).on('click', '.sort', function () {
-            var column = $(this).data('column');
-            sortOrders[column] = (sortOrders[column] === 'asc') ? 'desc' : 'asc';
+    $(document).on('click', '.sort', function () {
+        var column = $(this).data('column');
+        sortOrders[column] = (sortOrders[column] === 'asc') ? 'desc' : 'asc';
 
-            console.log('Column: ' + column + ', Order: ' + sortOrders[column]);
+        console.log('Column: ' + column + ', Order: ' + sortOrders[column]);
 
-            $('.sort').removeClass('asc desc');
-            $(this).addClass(sortOrders[column]);
+        $('.sort').removeClass('asc desc');
+        $(this).addClass(sortOrders[column]);
 
-            $.ajax({
-                type: 'GET',
-                url: '{{ route('product.sort') }}',
-                data: {
-                    column: column,
-                    order: sortOrders[column]
-                },
-                success: function (data) {
-                    $('#search-results').html(data);
-                    // クリック可能にする
-                    $('.sort').prop('disabled', false);
-                },
-                error: function (xhr, status, error) {
-                    console.error(xhr.responseText);
-                }
-            });
-            // クリック不可にする
-            $('.sort').prop('disabled', true);
+        // 検索フォームのデータを取得
+        var formData = $('#search-form').serialize();
+
+        // ソート情報を追加
+        formData += '&column=' + column + '&order=' + sortOrders[column];
+
+        // ソート情報をサーバーに送信
+        $.ajax({
+            type: 'GET',
+            url: '{{ route('product.sort') }}',
+            data: formData,
+            success: function (data) {
+                $('#search-results').html(data);
+                // クリック可能にする
+                $('.sort').prop('disabled', false);
+            },
+            error: function (xhr, status, error) {
+                console.error(xhr.responseText);
+            }
         });
+        // クリック不可にする
+        $('.sort').prop('disabled', true);
+    });
 
-        $('#search-form').on('submit', function (e) {
+
+    // 検索フォームのサブミット時に非同期で検索
+    $('#search-form').on('submit', function (e) {
+        e.preventDefault();
+        var formData = $(this).serialize();
+        // ソート情報も取得
+        var column = $('.sort.asc, .sort.desc').data('column');
+        var order = $('.sort.asc, .sort.desc').hasClass('asc') ? 'asc' : 'desc';
+        formData += '&column=' + column + '&order=' + order;
+        $.ajax({
+            type: 'POST',
+            url: '{{ route('product.search') }}',
+            data: formData,
+            success: function (data) {
+                $('#search-results').html(data);
+            },
+            error: function (xhr, status, error) {
+                console.error(xhr.responseText);
+            }
+        });
+    });
+
+        // 削除ボタンのクリック時に非同期で商品を削除
+        $(document).on('click', '.delete-btn', function (e) {
             e.preventDefault();
-            var formData = $(this).serialize();
-            $.ajax({
-                type: 'POST',
-                url: '{{ route('product.search') }}',
-                data: formData,
-                success: function (data) {
-                    $('#search-results').html(data);
-                },
-                error: function (xhr, status, error) {
-                    console.error(xhr.responseText);
-                }
-            });
+            var productId = $(this).data('product-id');
+
+            if (confirm('削除しますか？')) {
+                $.ajax({
+                    type: 'DELETE', // ここをDELETEに変更
+                    url: '{{ url("/products/async-delete/") }}/' + productId,
+                    success: function (data) {
+                        // 検索結果を再読み込みするか、必要に応じて UI を更新します
+                        alert(data.success);
+
+                        // 削除された商品のIDに対応する行を非表示にする
+                        $('#product-row-' + data.productId).hide();
+                    },
+                    error: function (xhr, status, error) {
+                        alert('削除に失敗しました: ' + xhr.responseText);
+                    }
+                });
+            }
         });
     });
 </script>
-
 @endsection

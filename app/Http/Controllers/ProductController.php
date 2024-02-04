@@ -117,6 +117,18 @@ class ProductController extends Controller
         }
     }
 
+    // 非同期削除のための新しいメソッドを追加
+    public function asyncDestroy(Product $product)
+{
+    try {
+        $productId = $product->id;
+        $product->delete();
+        return response()->json(['success' => '商品を削除しました', 'productId' => $productId]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => '商品の削除に失敗しました: ' . $e->getMessage()], 500);
+    }
+}
+
     //削除処理
     public function destroy(Product $product)
     {
@@ -147,6 +159,12 @@ class ProductController extends Controller
 {
     $column = $request->input('column');
     $order = $request->input('order');
+    $keyword = $request->input('keyword');
+    $minPrice = $request->input('min_price');
+    $maxPrice = $request->input('max_price');
+    $minStock = $request->input('min_stock');
+    $maxStock = $request->input('max_stock');
+    $selectedCompany = $request->input('company_name');
 
     // ソートの状態をセッションに保存
     session(['sort_column' => $column, 'sort_order' => $order]);
@@ -164,10 +182,27 @@ class ProductController extends Controller
         ])
         ->from('products')
         ->join('companies', 'products.company_name', '=', 'companies.id')
+        ->when($keyword, function ($query) use ($keyword) {
+            return $query->where('products.product_name', 'like', '%' . $keyword . '%');
+        })
+        ->when($selectedCompany, function ($query) use ($selectedCompany) {
+            return $query->where('products.company_name', $selectedCompany);
+        })
+        ->when($minPrice, function ($query) use ($minPrice) {
+            return $query->where('products.price', '>=', $minPrice);
+        })
+        ->when($maxPrice, function ($query) use ($maxPrice) {
+            return $query->where('products.price', '<=', $maxPrice);
+        })
+        ->when($minStock, function ($query) use ($minStock) {
+            return $query->where('products.stock', '>=', $minStock);
+        })
+        ->when($maxStock, function ($query) use ($maxStock) {
+            return $query->where('products.stock', '<=', $maxStock);
+        })
         ->orderBy($column, $order, 'utf8_unicode_ci') // COLLATEを指定して文字列としてソート
         ->paginate(5);
 
-    return view('search_results', compact('products'))->render(); return view('search_results', compact('products'))->render();
-    }
-
+    return view('search_results', compact('products', 'keyword'))->render();
+}
 }

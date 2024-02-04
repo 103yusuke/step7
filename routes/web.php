@@ -21,29 +21,28 @@ Route::get('/', function () {
 Route::get('/products', 'App\Http\Controllers\ProductController@index')->name('products.index');
 Route::get('/product', 'App\Http\Controllers\ProductController@index')->name('product.index');
 
-//新規登録
+// 新規登録
 Route::get('/products/create', 'App\Http\Controllers\ProductController@create')->name('product.create')->middleware('auth');
 Route::post('/products/store/', 'App\Http\Controllers\ProductController@store')->name('product.store')->middleware('auth');
 
-//編集
+// 編集
 Route::get('/products/edit/{product}', 'App\Http\Controllers\ProductController@edit')->name('product.edit')->middleware('auth');
 Route::put('/products/edit/{product}', 'App\Http\Controllers\ProductController@update')->name('product.update')->middleware('auth');
 
-//詳細
+// 詳細
 Route::get('/products/show/{product}', 'App\Http\Controllers\ProductController@show')->name('product.show');
 
-// 商品を削除する非同期アクションのルートを追加
-Route::delete('/products/{product}/async', 'App\Http\Controllers\ProductController@destroyAsync')->name('product.destroy.async')->middleware('auth');
+// 非同期削除のための新しいルートを追加
+Route::delete('/products/async-delete/{product}', 'App\Http\Controllers\ProductController@asyncDestroy')->name('product.async-destroy');
 
-//削除
+// 削除
 Route::delete('/products/{product}', 'App\Http\Controllers\ProductController@destroy')->name('product.destroy')->middleware('auth');
 
-//非同期検索用
+// 非同期検索用
 Route::post('/products/search', 'App\Http\Controllers\ProductController@search')->name('product.search');
 
-//ソート
+// ソート
 Route::get('/products/sort', 'App\Http\Controllers\ProductController@sort')->name('product.sort'); 
-
 
 Auth::routes();
 
