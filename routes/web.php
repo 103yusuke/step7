@@ -32,13 +32,10 @@ Route::put('/products/edit/{product}', 'App\Http\Controllers\ProductController@u
 // 詳細
 Route::get('/products/show/{product}', 'App\Http\Controllers\ProductController@show')->name('product.show');
 
-// 非同期削除のための新しいルートを追加
-Route::delete('/products/async-delete/{product}', 'App\Http\Controllers\ProductController@asyncDestroy')->name('product.async-destroy');
+// 非同期削除
+Route::delete('/products/async-delete/{product}', 'App\Http\Controllers\ProductController@asyncDestroy')->name('product.async-destroy')->middleware('auth');
 
-// 削除
-Route::delete('/products/{product}', 'App\Http\Controllers\ProductController@destroy')->name('product.destroy')->middleware('auth');
-
-// 非同期検索用
+// 非同期検索
 Route::post('/products/search', 'App\Http\Controllers\ProductController@search')->name('product.search');
 
 // ソート
